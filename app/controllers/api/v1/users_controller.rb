@@ -17,7 +17,13 @@ module Api
       end
 
       def show
-        @user = User.find(params[:id])
+        @user = if current_user.admin?
+                  User.find(params[:id])
+                elsif current_user
+                  current_user
+                else
+                  User.find(params[:id]).username
+                end
         json_response(@user)
       end
 
