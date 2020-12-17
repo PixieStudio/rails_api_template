@@ -2,7 +2,7 @@
 
 # Name: Template Rails Haml React
 # Author: Elly Veldriss
-# Instructions: $  rails new app_name -m https://github.com/PixieStudio/rails_api_template/blob/master/template.rb
+# Instructions: $  rails new app_name -m https://raw.githubusercontent.com/PixieStudio/rails_api_template/main/template.rb
 
 # def source_paths
 #   [__dir__]
@@ -98,7 +98,7 @@ end
 
 def copy_app_template
   directory 'app', force: true
-  # directory 'config', force: true
+  directory 'config', force: true
 end
 
 def stop_spring
@@ -106,7 +106,8 @@ def stop_spring
 end
 
 # Main setup
-source_paths
+# source_paths
+add_template_repository_to_source_path
 
 add_gems
 
