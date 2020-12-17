@@ -28,7 +28,8 @@ class User < ApplicationRecord
             length: {
               minimum: 6
             },
-            presence: true
+            presence: true,
+            if: :not_recovering_password
 
   def generate_password_token!
     self.reset_password_token = generate_token
@@ -47,6 +48,10 @@ class User < ApplicationRecord
   end
 
   private
+
+  def not_recovering_password
+    reset_password_token.nil?
+  end
 
   def generate_token
     SecureRandom.hex(10)
