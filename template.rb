@@ -2,10 +2,34 @@
 
 # Name: Template Rails Haml React
 # Author: Elly Veldriss
-# Instructions: $  rails new chat_cable -d postgresql --webpacker=react -m ~/Rails/rails-api-react-haml/template.rb
+# Instructions: $  rails new app_name -m https://github.com/PixieStudio/rails_api_template/blob/master/template.rb
 
-def source_paths
-  [__dir__]
+# def source_paths
+#   [__dir__]
+# end
+
+# Copied from: https://github.com/mattbrictson/rails-template
+# Add this template directory to source_paths so that Thor actions like
+# copy_file and template resolve against our source files. If this file was
+# invoked remotely via HTTP, that means the files are not present locally.
+# In that case, use `git clone` to download them to a local temporary dir.
+def add_template_repository_to_source_path
+  if __FILE__ =~ %r{\Ahttps?://}
+    require 'tmpdir'
+    source_paths.unshift(tempdir = Dir.mktmpdir('pixie-rails-template-'))
+    at_exit { FileUtils.remove_entry(tempdir) }
+    git clone: [
+      '--quiet',
+      'https://github.com/PixieStudio/rails_api_template.git',
+      tempdir
+    ].map(&:shellescape).join(' ')
+
+    if (branch = __FILE__[%r{rails_api_template/(.+)/template.rb}, 1])
+      Dir.chdir(tempdir) { git checkout: branch }
+    end
+  else
+    source_paths.unshift(File.dirname(__FILE__))
+  end
 end
 
 def add_gems
@@ -38,24 +62,6 @@ def add_users
     gsub_file migration, /:admin/, ':admin, default: false'
   end
 
-  inject_into_file 'app/controllers/application_controller.rb', after: "class ApplicationController < ActionController::API\n" do
-    <<~RUBY
-      include Response
-      include ExceptionHandler
-
-      # called before every action on controllers
-      before_action :authorize_request
-      attr_reader :current_user
-
-      private
-
-      # Check for valid request token and return user
-      def authorize_request
-        @current_user = AuthorizeApiRequest.new(request.headers).call[:user]
-      end
-    RUBY
-  end
-
   seed_content = <<~RUBY
     User.create!(
       username: 'Admin',
@@ -79,7 +85,6 @@ def add_routes
   route_content = <<~RUBY
     namespace :api do
       namespace :v1 do
-        get 'users', to: 'users#check'
         get 'users/:id', to: 'users#show'
         post 'auth/login', to: 'authentication#authenticate'
         post 'signup', to: 'users#create'
@@ -133,8 +138,7 @@ after_bundle do
     Vous pouvez changer le nom de l'application dans : ./config/application.rb
 
     Pour lancer l'application :
-    $  cd #{app_name} && rails s
+    $  cd #{app_name} && rails s -p 3001
     =========================================================================
-
   EOS
 end
