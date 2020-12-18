@@ -1,18 +1,13 @@
 # frozen_string_literal: true
 
-# Name: Template Rails Haml React
+# Name: Template Rails Api
 # Author: Elly Veldriss
+# Sources :
+# https://github.com/mattbrictson/rails-template
+# https://github.com/excid3/jumpstart
+# https://guides.rubyonrails.org/rails_application_templates.html
 # Instructions: $  rails new app_name -m https://raw.githubusercontent.com/PixieStudio/rails_api_template/main/template.rb
 
-# def source_paths
-#   [__dir__]
-# end
-
-# Copied from: https://github.com/mattbrictson/rails-template
-# Add this template directory to source_paths so that Thor actions like
-# copy_file and template resolve against our source files. If this file was
-# invoked remotely via HTTP, that means the files are not present locally.
-# In that case, use `git clone` to download them to a local temporary dir.
 def add_template_repository_to_source_path
   if __FILE__ =~ %r{\Ahttps?://}
     require 'tmpdir'
@@ -33,17 +28,21 @@ def add_template_repository_to_source_path
 end
 
 def add_gems
-  gsub_file 'Gemfile',
-            "# gem 'bcrypt', '~> 3.1.7'",
-            "gem 'bcrypt', '~> 3.1.7'"
-  gsub_file 'Gemfile',
-            "# gem 'rack-cors'",
-            "gem 'rack-cors'"
+  # gsub_file 'Gemfile',
+  #           "# gem 'bcrypt', '~> 3.1.7'",
+  #           "gem 'bcrypt', '~> 3.1.7'"
+  # gsub_file 'Gemfile',
+  #           "# gem 'rack-cors'",
+  #           "gem 'rack-cors'"
   gem_group :development, :test do
     gem 'rspec-rails', '~> 4.0.1'
   end
   gem 'aws-sdk-s3', require: false
+  gem 'bcrypt', '~> 3.1.7'
+  gem 'jbuilder', '~> 2.7'
+  gem 'jsonapi-serializer'
   gem 'jwt'
+  gem 'rack-cors'
 end
 
 def set_application_name
@@ -81,6 +80,17 @@ def add_users
   append_to_file 'db/seeds.rb', seed_content
 end
 
+def add_news
+  generate 'model', 'News title:string body:text user:references published:boolean'
+
+  in_root do
+    migration = Dir.glob('db/migrate/*').max_by { |f| File.mtime(f) }
+    gsub_file migration, /:published/, ':published, default: false'
+  end
+
+  generate 'serializer', 'News title body user_id published'
+end
+
 def add_routes
   route_content = <<~RUBY
     namespace :api do
@@ -90,6 +100,7 @@ def add_routes
         post 'signup', to: 'users#create'
         post 'password/forgot', to: 'passwords#forgot'
         post 'password/reset', to: 'passwords#reset'
+        resources :news
       end
     end
   RUBY
@@ -125,8 +136,6 @@ after_bundle do
   rails_command 'active_storage:install'
   rails_command 'db:migrate'
   rails_command 'db:seed'
-
-  #   remove_app_css
 
   git :init
   git add: '.'
