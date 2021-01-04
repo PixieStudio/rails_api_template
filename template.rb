@@ -100,6 +100,10 @@ def add_routes
   route_content = <<~RUBY
     namespace :api do
       namespace :v1 do
+        namespace :admin do
+          get 'users', to: 'users#index'
+          resources :news
+        end
         get 'users/:id', to: 'users#show'
         post 'auth/login', to: 'authentication#authenticate'
         post 'signup', to: 'users#create'

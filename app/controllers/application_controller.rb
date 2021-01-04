@@ -13,4 +13,11 @@ class ApplicationController < ActionController::API
   def authorize_request
     @current_user = AuthorizeApiRequest.new(request.headers).call[:user]
   end
+
+  def is_admin!
+    if current_user&.admin
+    else
+      json_response({ message: 'Non autorisé' }, :unauthorized)
+    end
+  end
 end
