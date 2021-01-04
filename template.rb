@@ -6,7 +6,7 @@
 # https://github.com/mattbrictson/rails-template
 # https://github.com/excid3/jumpstart
 # https://guides.rubyonrails.org/rails_application_templates.html
-# Instructions: $  rails new app_name -m https://raw.githubusercontent.com/PixieStudio/rails_api_template/main/template.rb
+# Instructions: $  rails new app_name --api -m https://raw.githubusercontent.com/PixieStudio/rails_api_template/main/template.rb
 
 def add_template_repository_to_source_path
   if __FILE__ =~ %r{\Ahttps?://}
@@ -39,6 +39,7 @@ def add_gems
   end
   gem 'aws-sdk-s3', require: false
   gem 'bcrypt', '~> 3.1.7'
+  gem 'friendly_id', '~> 5.4.0'
   gem 'jbuilder', '~> 2.7'
   gem 'jsonapi-serializer'
   gem 'jwt'
@@ -51,6 +52,10 @@ end
 
 def install_rspec
   generate 'rspec:install'
+end
+
+def add_friendly
+  generate 'friendly_id'
 end
 
 def add_users
@@ -88,7 +93,7 @@ def add_news
     gsub_file migration, /:published/, ':published, default: false'
   end
 
-  generate 'serializer', 'News title body user_id published'
+  generate 'serializer', 'News title body user_id published slugged'
 end
 
 def add_routes
@@ -125,7 +130,9 @@ add_gems
 after_bundle do
   stop_spring
   set_application_name
+  add_friendly
   add_users
+  add_news
   add_routes
   stop_spring
 
