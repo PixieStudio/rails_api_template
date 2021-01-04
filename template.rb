@@ -86,14 +86,14 @@ def add_users
 end
 
 def add_news
-  generate 'model', 'News title:string body:text user:references published:boolean'
+  generate 'model', 'News title:string body:text user:references published:boolean slug:uniq'
 
   in_root do
     migration = Dir.glob('db/migrate/*').max_by { |f| File.mtime(f) }
     gsub_file migration, /:published/, ':published, default: false'
   end
 
-  generate 'serializer', 'News title body user_id published slugged'
+  generate 'serializer', 'News title body user_id published slug'
 end
 
 def add_routes
